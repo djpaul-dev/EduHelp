@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<meta charset="UTF-8">
+<title>EduHelp</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #messages {
+    float: left;
+    margin-left: 12%;
+    height: 200px;
+    width: 60%;
+    overflow-y: scroll;
+    overflow: overlay;
+    border: 1px solid black;
+    padding: 5px;
+    background-color: #f9f9f9;
+  }
+  #message{
+    height: 136.5px;
+    width: 20%;
+    border: 1px solid black;
+    float: right;
+    margin-right: 12%;
+  }
+  #send{
+    margin-top: 2%;
+    margin-left: 1%;
+    font-size: 20px;
+    font-family: sans-serif type;
+    padding: 0.9em 3.6em;
+    border: 2px solid  rgb(255, 186, 49);
+    color:  rgb(255, 186, 49);
+    background-color: white;
+    cursor: pointer;
+  }
+  #send:hover {
+    background-color:  rgb(255, 186, 49);
+    color: white;
+  }
+
+  #imageInput{
+    margin-left: 12.5%;
+  }
+  #displayImage{
+    margin-left: 12%;
+    width: 100%; /* Adjust width as needed */
+    height: 180px; /* Adjust height as needed */
+    display: none; /* Hide until an image is selected */
+    object-fit: contain; /* Ensure the whole image fits within the element */
+    background-color: #ffffff; /* Optional: Sets background color */
+  }
+  
+
+  #additionalInput {
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 1rem 2rem;
+    height: 100px;
+    width: 100%;
+  }
+  #save {
+    border-radius: 20px;
+    aspect-ratio: 1;
+    height: 50%;
+    position: absolute;
+    top: 13%;
+    width: 8%;
+    right: -85px;
+    font-size: 15px;
+    font-family: sans-serif type;
+    border: 1.3px solid  black;
+    color:  black;
+    background-color: white;
+    cursor: pointer;
+  }
+  #save:hover {
+    background-color:  black;
+    color: white;
+  }
+
+  #personalityInput{
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+    border-radius: 15px;
+    padding: 2rem 2rem;
+    height: 230px;
+    width: 100%;
+  }
+  #execute {
+    border-radius: 50px;
+    aspect-ratio: 1;
+    height: 15%;
+    position: absolute;
+    top: 8.7%;
+    width: 6.8%;
+    right: -85px;
+    border: 1.3px solid  black;
+    color:  black;
+    background-color: white;
+    cursor: pointer;
+  }
+  #execute:hover {
+    background-color:  black;
+    color: white;
+  }
+  #result {
+    text-align: center;
+    margin-top: 1.7%;
+  }
+  #voiceInput {
+    border-radius: 50px;
+    aspect-ratio: 1;
+    height: 52px;
+    position: absolute;
+    width: 6.8%;
+    right: -85px;
+    border: 1.3px solid  black;
+    color:  black;
+    background-color: white;
+    cursor: pointer;
+  }
+  #voiceInput:hover {
+    background-color:  black;
+    color: white;
+  }
+
+  .container{
+    position: absolute;
+    margin-top: -43%;
+    left: 0;
+    width: 100%;
+  }
+  .animation{
+    position: absolute;
+    margin-top: -26%;
+    left: 0;
+    width: 100%;
+  }
+  .navbar{
+    list-style-type: none;
+    background-color: orange;
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+  }
+  .customize {
+    padding: 16px;
+    margin-left: 18.5%;
+  }
+  .sendDiv {
+    margin-left: 67.5%;
+  }
+  .material {
+    width: 400px;
+    max-width: 100%;
+    margin-left: 12%;
+    position: relative;
+  }
+  .imageContainer{
+    max-width: 100%;
+    margin-top: 12%;
+    margin-left: 12%;
+    margin-bottom: 1%;
+    position: relative;
+    width: 472px; 
+    height: 180px; 
+    border: 1px solid #000000; 
+    background-color: rgba(255, 255, 255, 0.362);
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    overflow: hidden;
+  }
+  .personalityBox {
+    width: 730px;
+    max-width: 100%;
+    float:right; 
+    margin-top: -11.6%;
+    margin-right: 15.8%;
+    position: relative;
+  } 
+  .voiceContainter{
+    width: 730px;
+    max-width: 100%;
+    float:right; 
+    margin-top: -11.6%;
+    margin-right: 15.8%;
+    position: relative;
+  }
+  .backgroundWave{
+    min-height:80vh;
+    width:100%;
+    background: orange;
+    position:relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  svg {
+    position: absolute;
+    bottom:0;
+    left:0;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <nav>
+        <ul class = "navbar">
+            <li style="float: left; margin-left: 10%;"><a style = "color: white; font-size: 30px; text-decoration: none; padding: 25px; display: block; text-align: center;"><i class="fa-solid fa-handshake-angle"></i> EduHelp</a>
+            <li style="float: right; margin-right: 10%;"><a style = "color: white; font-size: 25px; padding: 25px; display: block; text-align: center;"href = " ">GitHub</a></ul>
+    </nav>
+</header>
+  <div class = "backgroundWave">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#ffffff" fill-opacity="1" d="M0,288L60,261.3C120,235,240,181,360,138.7C480,96,600,64,720,74.7C840,85,960,139,1080,154.7C1200,171,1320,149,1380,138.7L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path></svg>
+    <h1 style="font-size: 4em; color: #fff; font-family: 'raleway'; font-weight: 700; margin-top: -30%;">Who Doesn't Want to Learn, Lets Grow Together!</h1>
+  </div>
+  <div class="animation">
+    <p style="font-size: 1.5em; color: #fff; font-family: 'raleway'; font-weight: 100; margin-top: -9.5%; margin-left: 11%;">Craft Your Insight, Tailored to Your Mind <span class="auto-type"></span></p>
+  </div>
+<div class="container">
+<div class="imageContainer">
+  <img id="displayImage" style="max-width: 100%; max-height: 100%; display: none;" />
+  <input type="file" id="imageInput" accept="image/*" />
+</div>
+
+<!-- <img id="displayImage" style="display:none;" /> -->
+  <div class="personalityBox">
+    <textarea id="personalityInput" placeholder="Tell be a bit about you, yourself and you. The more you can share with me merrier..."></textarea>
+    <button id = "execute" onclick="sendAndExecute()"><i class="fa-solid fa-play"></i></button>
+    <div id="result">Your Classification is ...</div>
+    <!-- Response will appear here... -->
+  </div>
+  <div class = "voiceContainter">
+    <button id="voiceInput"><i class="fa-solid fa-microphone"></i></button>
+  </div>
+  <div class="material">
+    <textarea id="additionalInput" placeholder="Type in what you want to summarize here or put a picture of it above..."></textarea>
+    <button id="save"><i class="fa-solid fa-floppy-disk"></i></button>
+  </div>
+
+<ul id="messages"></ul>
+
+  <div class = "customize">
+    <input id="message" autocomplete="off" placeholder="   Don't make sense? Tell me how you learn..."/>
+    <div class="sendDiv">
+      <button id="send">Summarize ►</button>
+    </div>
+  </div>
+</div>
+<script src="example.js"></script>
+<script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
+<script>
+  // Inputs Handler
+  let savedInput = '';
+  let personalityType = ''
+
+    // Input PersonalityTextBox
+    function sendAndExecute() {
+      var inputText = document.getElementById("personalityInput").value;
+      fetch('/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("result").innerHTML = data.result;
+        personalityType = data.result;
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const socket = io();
+    const input = document.querySelector('#message');
+    const additionalInput = document.querySelector('#additionalInput');
+    const saveButton = document.querySelector('#save');
+    const sendButton = document.querySelector('#send');
+    const imageInput = document.getElementById('imageInput');
+    const displayImage = document.getElementById('displayImage');
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (typeof SpeechRecognition !== "undefined") {
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false; // Set for single-shot, but you'll manage continuous listening manually
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    let recognizing = false; // State to track if we are currently recognizing
+    let timeoutId = null; // To keep track of the timeout
+
+    const toggleRecognition = () => {
+      if (recognizing) {
+        recognition.stop();
+        return;
+      }
+      recognition.start();
+      timeoutId = setTimeout(() => {
+        recognition.stop();
+      }, 10000); // Automatically stop after 10 seconds
+    };
+
+    // Toggle recognition on button click
+    document.querySelector("#voiceInput").addEventListener("click", () => {
+      toggleRecognition();
+    });
+
+    recognition.onstart = () => {
+      recognizing = true;
+      console.log("Speech recognition started");
+    };
+
+    recognition.onend = () => {
+      recognizing = false;
+      clearTimeout(timeoutId); // Clear the timeout to prevent it from stopping a new session
+      console.log("Speech recognition ended");
+    };
+
+    recognition.onresult = (event) => {
+      const lastResult = event.results.length - 1;
+      const text = event.results[lastResult][0].transcript;
+      document.querySelector("#personalityInput").value += text + " "; // Append the recognized text
+    };
+
+    recognition.onerror = (event) => {
+      recognizing = false;
+      clearTimeout(timeoutId);
+      console.error("Speech Recognition Error", event.error);
+    };
+  } else {
+    console.log("Speech Recognition Not Available");
+    document.querySelector("#voiceInput").style.display = "none";
+  }
+
+    // Image Handler
+    imageInput.onchange = () => {
+    const files = imageInput.files;
+      if (files.length > 0) {
+        const fileReader = new FileReader();
+        
+        fileReader.onload = function(event) {
+          displayImage.src = event.target.result;
+          displayImage.style.display = 'block'; // Show the image
+
+          // Use Tesseract.js to recognize text from the image
+          Tesseract.recognize(
+            event.target.result,
+            'eng', // Specify the language as needed
+            {
+              logger: m => console.log(m) // Log progress
+            }
+          ).then(({ data: { text } }) => {
+            console.log(text); // Log recognized text
+            savedInput = text; // Save recognized text to savedInput
+          });
+        };
+
+        fileReader.readAsDataURL(files[0]);
+      }
+    };
+
+    // GPT Input
+    sendButton.onclick = () => {
+      const message = "I am of personality type " + personalityType +
+      ", strictly summarize the following in a way someone of my personality would best understand: " + savedInput + ". Here are a bit more instructions(if empty ignore):"+ input.value;
+      socket.emit('chat message', message);
+      // input.value = ''; // Clear the input after sending
+    };
+    // Input for summary in question
+    saveButton.onclick = () => {
+    savedInput += additionalInput.value; 
+    };
+
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault(); // Prevent the default action of the enter key
+        sendButton.click();
+      }
+    });
+
+    socket.on('bot reply', function(msg) {
+      const node = document.createElement("LI");
+      const textnode = document.createTextNode('Bot: ' + msg);
+      node.appendChild(textnode);
+      document.getElementById("messages").appendChild(node);
+    });
+  });
+
+  var typed = new Typed(".auto-type",{
+    strings: ["... where every word resonates.", "... because personality shapes insight.", "... turning info into your dialogue.", "... navigating knowledge with your compass.", "... crafting summaries that truly click."],
+    typeSpeed : 20,
+    backSpeed : 20,
+    loop : true
+  })
+</script>
+</body>
+</html>
